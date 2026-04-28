@@ -1,0 +1,10 @@
+name: zmx
+version: 1.0.0
+description: APM project for zmx
+author: Sarguru02
+dependencies:
+  apm:
+  - srid/agency#master
+  mcp: []
+includes: auto
+scripts: {}
