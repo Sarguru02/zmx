@@ -21,11 +21,17 @@ in
       description = "The zmx package to use.";
     };
 
-    enableBashIntegration = mkEnableOption "Bash integration (prompt and completions)";
+    enableBashPrompt = mkEnableOption "Bash prompt integration (shows session name in PS1)";
 
-    enableZshIntegration = mkEnableOption "Zsh integration (prompt and completions)";
+    enableBashCompletions = mkEnableOption "Bash completions for zmx commands and session names";
 
-    enableFishIntegration = mkEnableOption "Fish integration (prompt and completions)";
+    enableZshPrompt = mkEnableOption "Zsh prompt integration (shows session name in PS1)";
+
+    enableZshCompletions = mkEnableOption "Zsh completions for zmx commands and session names";
+
+    enableFishPrompt = mkEnableOption "Fish prompt integration (shows session name)";
+
+    enableFishCompletions = mkEnableOption "Fish completions for zmx commands and session names";
 
     sessionPrefix = mkOption {
       type = types.nullOr types.str;
@@ -37,45 +43,57 @@ in
   config = mkIf cfg.enable {
     home.packages = [ cfg.package ];
 
-    programs.bash.initExtra = mkIf cfg.enableBashIntegration ''
-      # zmx prompt integration
-      if [[ -n $ZMX_SESSION ]]; then
-        export PS1="[$ZMX_SESSION] ''${PS1}"
-      fi
+    programs.bash.initExtra = mkIf (cfg.enableBashPrompt || cfg.enableBashCompletions) (
+      optionalString cfg.enableBashPrompt ''
+        # zmx prompt integration
+        if [[ -n $ZMX_SESSION ]]; then
+          export PS1="[$ZMX_SESSION] ''${PS1}"
+        fi
+      ''
+      + optionalString cfg.enableBashCompletions ''
 
-      # zmx completions
-      if command -v zmx &> /dev/null; then
-        eval "$(zmx completions bash)"
-      fi
-    '';
+        # zmx completions
+        if command -v zmx &> /dev/null; then
+          eval "$(zmx completions bash)"
+        fi
+      ''
+    );
 
-    programs.zsh.initExtra = mkIf cfg.enableZshIntegration ''
-      # zmx prompt integration
-      if [[ -n $ZMX_SESSION ]]; then
-        export PS1="[$ZMX_SESSION] ''${PS1}"
-      fi
+    programs.zsh.initExtra = mkIf (cfg.enableZshPrompt || cfg.enableZshCompletions) (
+      optionalString cfg.enableZshPrompt ''
+        # zmx prompt integration
+        if [[ -n $ZMX_SESSION ]]; then
+          export PS1="[$ZMX_SESSION] ''${PS1}"
+        fi
+      ''
+      + optionalString cfg.enableZshCompletions ''
 
-      # zmx completions
-      if command -v zmx &> /dev/null; then
-        eval "$(zmx completions zsh)"
-      fi
-    '';
+        # zmx completions
+        if command -v zmx &> /dev/null; then
+          eval "$(zmx completions zsh)"
+        fi
+      ''
+    );
 
-    programs.fish.interactiveShellInit = mkIf cfg.enableFishIntegration ''
-      # zmx prompt integration
-      functions -c fish_prompt _original_fish_prompt 2>/dev/null
-      function fish_prompt --description 'Write out the prompt'
-        if set -q ZMX_SESSION
-          echo -n "[$ZMX_SESSION] "
+    programs.fish.interactiveShellInit = mkIf (cfg.enableFishPrompt || cfg.enableFishCompletions) (
+      optionalString cfg.enableFishPrompt ''
+        # zmx prompt integration
+        functions -c fish_prompt _original_fish_prompt 2>/dev/null
+        function fish_prompt --description 'Write out the prompt'
+          if set -q ZMX_SESSION
+            echo -n "[$ZMX_SESSION] "
+          end
+          _original_fish_prompt
         end
-        _original_fish_prompt
-      end
+      ''
+      + optionalString cfg.enableFishCompletions ''
 
-      # zmx completions
-      if type -q zmx
-        zmx completions fish | source
-      end
-    '';
+        # zmx completions
+        if type -q zmx
+          zmx completions fish | source
+        end
+      ''
+    );
 
     home.sessionVariables = mkIf (cfg.sessionPrefix != null) {
       ZMX_SESSION_PREFIX = cfg.sessionPrefix;
