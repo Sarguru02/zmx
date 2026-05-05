@@ -59,7 +59,7 @@ in
       ''
     );
 
-    programs.zsh.initExtra = mkIf (cfg.enableZshPrompt || cfg.enableZshCompletions) (
+    programs.zsh.initContent = mkIf (cfg.enableZshPrompt || cfg.enableZshCompletions) (
       optionalString cfg.enableZshPrompt ''
         # zmx prompt integration
         if [[ -n $ZMX_SESSION ]]; then
