@@ -10,7 +10,10 @@
     let
       flake-utils = zig2nix.inputs.flake-utils;
     in
-    (flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ] (
+    {
+      homeManagerModules.default = import ./modules/home-manager;
+    }
+    // (flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ] (
       system:
       let
         env = zig2nix.outputs.zig-env.${system} {
